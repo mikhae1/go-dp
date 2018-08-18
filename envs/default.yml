@@ -1,0 +1,26 @@
+---
+default:
+  hidden: true
+  log: ./logs/deploy.log
+
+  general:
+    # this will be merged to the remote and local section
+
+  remote:
+    user: noodoo
+
+    # settings for the commands that will be run remotely
+    # log: /var/log/noodoo/noodoo.log
+    log:
+      noodoo: /var/log/noodoo/noodoo.log
+      queue: /var/log/noodoo/noodoo-queue.log
+
+    cmd:
+      # reload: sudo /usr/local/bin/noodoo_reload
+      # restart: sudo /usr/local/bin/noodoo_restart
+      # status: sudo /usr/local/bin/noodoo_status | grep running
+      pre: echo 'no pre script configured'
+      post: echo 'no post script configured'
+
+  local:
+    # settings for the commands that will be run localy
