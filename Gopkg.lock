@@ -42,12 +42,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:7071b9c74cfc8531abe76f20e947aeeb96b3c79fef08cf9248b60eff744d1cb7"
+  digest = "1:62ac75a922ad099bc89d857f873837c6db2f757c960d5106e57081218fa8ba1d"
   name = "github.com/mink0/exec-cmd"
   packages = ["."]
   pruneopts = "UT"
-  revision = "77a81b6ec6133cef9b4459c60c774df18eaa0647"
-  version = "v0.1.1"
+  revision = "ea8d3f56f2d54a837b37e9267efc55c7bf6dbf98"
+  version = "v0.1.2"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"

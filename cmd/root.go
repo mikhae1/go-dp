@@ -19,18 +19,26 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/minkolazer/gp/config"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 var (
-	env     config.EnvExec
+	ctx     envContext
 	vFlag   bool
 	envList []string // environment list for autocompletion
 
-	configPath = "./envs/" // default path to environment files
+	configPath = "./envs" // default path to environment files
 )
+
+type envContext struct {
+	ready   bool
+	args    []string
+	targets []config.EnvExec
+}
 
 type logWriter struct {
 }
@@ -46,33 +54,7 @@ var rootCmd = &cobra.Command{
 	Long: `
 Automation tool for running repetitive tasks on servers
 Copyright(c) 2018`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		log.Printf("inside rootCmd PersistentPreRun with args: %v\n", args)
-
-		// try to resolve args[0] and args[1] as env and target
-		if len(args) == 0 {
-			return
-		}
-
-		getEnv()
-
-		for _, a := range args {
-			if i := arrayContains(envList, a); i == -1 {
-				break
-			}
-
-			var err error
-			env, err = config.InitEnv(configPath, a)
-			if err != nil {
-				exception(err)
-			}
-		}
-
-		// FIXME: remove args
-		// args = []string{}
-		// cmd.SetArgs(append([]string{"name"}, args...))
-
-	},
+	PersistentPreRunE: initEnvContext,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -119,4 +101,64 @@ func getEnv() *[]string {
 	}
 
 	return &envList
+}
+
+func initEnvContext(cmd *cobra.Command, args []string) (err error) {
+	log.Printf("inside rootCmd PersistentPreRun with args: %v\n", args)
+
+	// try to resolve args as env and targets
+	if len(args) == 0 {
+		return
+	}
+
+	getEnv()
+
+	// find env
+	ctx.args = append([]string(nil), args...) // full slice copy
+	for i, arg := range args {
+		if i := arrayContains(envList, arg); i == -1 {
+			continue
+		}
+
+		// find targets
+		tlist := []string{}
+		if i < len(args)-1 {
+			tlist = strings.Split(args[i+1], ",")
+		}
+
+		// ignore wrong target check
+		// missed := false
+		// for _,v := tlist {
+		// 	if arrayContains()
+		// }
+
+		if ctx.targets, err = config.InitEnv(configPath, arg, tlist); err != nil {
+			return err
+		}
+
+		ctx.args = append(ctx.args[:i], ctx.args[i+1:]...)
+		ctx.ready = true
+		break
+	}
+
+	if !ctx.ready {
+		err = errors.Errorf("unknown environment: %v", args)
+		return
+	}
+
+	// if ai >= len(args)-1 {
+	// 	return nil
+	// }
+	// // find targets
+	// var tlist []string
+	// if ai < len(args)-1 {
+	// 	tlist = strings.Split(args[ai+1], ",")
+	// }
+
+	// fmt.Printf("%s", tlist)
+
+	// FIXME: remove args
+	// args = []string{}
+	// cmd.SetArgs(append([]string{"name"}, args...))
+	return nil
 }

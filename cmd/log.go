@@ -38,33 +38,45 @@ var logCmd = &cobra.Command{
 	// 	return fmt.Errorf("unknown environment specified: %s", args[0])
 	// },
 
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Printf("inside log with args: %v\n", args)
 
-		var lpath string
-		if len(args) > 1 {
-			if strings.Contains(args[1], "/") {
-				// real path as log targets
-				lpath += strings.Join(args[1:], " ")
-			} else {
-				// names  log
-				for _, a := range args[1:] {
-					for k, l := range env.Env.Remote.Log {
-						if k == a {
-							lpath += l + " "
+		// var cmds []execmd.ClusterRes
+		for _, env := range ctx.targets {
+			lpath := ""
+			if len(ctx.args) > 0 {
+				if strings.Contains(ctx.args[0], "/") {
+					// real path as log targets
+					lpath += strings.Join(ctx.args[0:], " ")
+				} else {
+					// names  log
+					for _, a := range ctx.args[0:] {
+						for k, l := range env.Env.Remote.Log {
+							if k == a {
+								lpath += l + " "
+							}
 						}
 					}
 				}
+			} else {
+				// no  specified
+				for _, l := range env.Env.Remote.Log {
+					lpath += l + " "
+				}
 			}
-		} else {
-			// no  specified
-			for _, l := range env.Env.Remote.Log {
-				lpath += l + " "
+
+			_, err := env.Remote.Run("tail -f -n100 " + lpath)
+			if err != nil {
+				return err
 			}
+
+			// cmds = append(cmds, cmd)
 		}
 
-		env.Remote.Run("tail -f -n100 " + lpath)
-		// env.Remote.Run("parallel --tagstring '{}:' --line-buffer tail -f {} ::: " + lpath)
+		// for _,c := range cmds {
+
+		// }
+		return nil
 	},
 }
 

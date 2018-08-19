@@ -1,9 +1,8 @@
 ---
 default:
   hidden: true
-  log: ./logs/deploy.log
 
-  general:
+  defaults:
     # this will be merged to the remote and local section
 
   remote:

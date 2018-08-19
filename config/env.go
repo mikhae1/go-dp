@@ -8,13 +8,13 @@ type Env struct {
 	Parent   string            `yaml:"parent"`
 	Hidden   bool              `yaml:"hidden"`
 	Template map[string]string `yaml:"template"`
-	General  envTarget         `yaml:"general"`
+	Defaults envTarget         `yaml:"defaults"`
 	Remote   envTarget         `yaml:"remote"`
 	Local    envTarget         `yaml:"local"`
 	Targets  map[string]struct {
-		General envTarget `yaml:"general"`
-		Remote  envTarget `yaml:"remote"`
-		Local   envTarget `yaml:"local"`
+		Defaults envTarget `yaml:"defaults"`
+		Remote   envTarget `yaml:"remote"`
+		Local    envTarget `yaml:"local"`
 	} `yaml:"targets"`
 }
 
@@ -23,14 +23,14 @@ type mapOrString map[string]string
 type sliceOrString []string
 
 type envTarget struct {
-	Servers sliceOrString `yaml:"servers"`
-	User    string        `yaml:"user"`
-	Log     mapOrString   `yaml:"log"`
-	Cmd     mapOrString   `yaml:"cmd"`
-	Cat     mapOrString   `yaml:"cat"`
-	Branch  string        `yaml:"branch"`
-	URL     string        `yaml:"url"`
-	Path    string        `yaml:"path"`
+	Hosts  sliceOrString `yaml:"hosts"`
+	User   string        `yaml:"user"`
+	Log    mapOrString   `yaml:"log"`
+	Cmd    mapOrString   `yaml:"cmd"`
+	Cat    mapOrString   `yaml:"cat"`
+	Branch string        `yaml:"branch"`
+	URL    string        `yaml:"url"`
+	Path   string        `yaml:"path"`
 }
 
 // implements the yaml.Unmarshaler interface for types that could be string or maps

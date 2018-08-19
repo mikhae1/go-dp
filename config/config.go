@@ -27,12 +27,12 @@ type EnvExec struct {
 // return initialized Env for envName
 // TODO
 // 	- templating
-func InitEnv(configPath string, envName string) (env EnvExec, err error) {
+func InitEnv(configPath string, envName string, targetNames []string) (targets []EnvExec, err error) {
 	var (
 		config map[string]Env // unitialized envs from config files
 	)
 
-	log.Printf(`init env for %s from path: %s...`, envName, configPath)
+	log.Printf(`init env for %s:%s using: %s...`, envName, targetNames, configPath)
 
 	if config, err = readConfig(configPath); err != nil {
 		return
@@ -44,20 +44,22 @@ func InitEnv(configPath string, envName string) (env EnvExec, err error) {
 		return
 	}
 
-	env.Env = config[envName]
+	env := EnvExec{
+		Env: config[envName],
+	}
 
 	// merge `General` field into `Local` and `Remote` fields
-	if err = mergo.Merge(&env.Env.Remote, env.Env.General); err != nil {
+	if err = mergo.Merge(&env.Env.Remote, env.Env.Defaults); err != nil {
 		return
 	}
-	if err = mergo.Merge(&env.Env.Local, env.Env.General); err != nil {
+	if err = mergo.Merge(&env.Env.Local, env.Env.Defaults); err != nil {
 		return
 	}
 
 	// get list of env parents
 	envParents, err := getParents(config, envName)
 	if err != nil {
-		err = errors.Wrapf(err, "can't resolve '%s' parents: %v", envName, envParents)
+		err = errors.Wrapf(err, "can't resolve '%s' env parents: %v", envName, envParents)
 		return
 	}
 
@@ -66,7 +68,7 @@ func InitEnv(configPath string, envName string) (env EnvExec, err error) {
 
 		// merge parents fields
 		for _, e := range envParents {
-			if err = mergo.Merge(&env.Env.General, config[e].General); err != nil {
+			if err = mergo.Merge(&env.Env.Defaults, config[e].Defaults); err != nil {
 				return
 			}
 			if err = mergo.Merge(&env.Env.Local, config[e].Local); err != nil {
@@ -77,20 +79,77 @@ func InitEnv(configPath string, envName string) (env EnvExec, err error) {
 			}
 		}
 
-		// when parents merged, new fields may appear in `General`
-		// merge `General` field into `Local` and `Remote` fields
-		if err = mergo.Merge(&env.Env.Remote, env.Env.General); err != nil {
+		// when parents merged, new data may appear in `Defaults` fields,
+		// so merge `Defaults` fields into `Local` and `Remote`
+		if err = mergo.Merge(&env.Env.Remote, env.Env.Defaults); err != nil {
 			return
 		}
-		if err = mergo.Merge(&env.Env.Local, env.Env.General); err != nil {
+		if err = mergo.Merge(&env.Env.Local, env.Env.Defaults); err != nil {
 			return
 		}
 	}
 
-	// init execmd fields
+	// init exec wrappers
 	env.Local = *execmd.NewCmd()
+	env.Remote = *execmd.NewClusterSSHCmd(env.Env.Remote.Hosts)
 
-	env.Remote = *execmd.NewClusterSSHCmd(env.Env.Remote.Servers)
+	if len(env.Env.Targets) == 0 || len(targetNames) == 0 {
+		targets = append(targets, env)
+		return
+	}
+
+	/*
+		targets initialization
+
+		best effort: target argument maybe not a target,
+		throw error only if we have a list of the targets
+	*/
+
+	for _, tname := range targetNames {
+		t, ok := env.Env.Targets[tname]
+		if !ok {
+			if len(targetNames) > 1 {
+				err = errors.Errorf("unknown target %s for %s env", tname, envName)
+				return
+			}
+
+			break
+		}
+
+		tEnv := Env{}
+		// merge target environment
+		if err = mergo.Merge(&tEnv.Defaults, t.Defaults); err != nil {
+			return
+		}
+		if err = mergo.Merge(&tEnv.Local, tEnv.Defaults); err != nil {
+			return
+		}
+		if err = mergo.Merge(&tEnv.Remote, tEnv.Defaults); err != nil {
+			return
+		}
+
+		// merge target environment into env and override fields which are not default
+		if err = mergo.Merge(&env.Env.Defaults, t.Defaults, mergo.WithOverride); err != nil {
+			return
+		}
+		if err = mergo.Merge(&env.Env.Local, tEnv.Local, mergo.WithOverride); err != nil {
+			return
+		}
+		if err = mergo.Merge(&env.Env.Remote, tEnv.Remote, mergo.WithOverride); err != nil {
+			return
+		}
+
+		// re-init exec wrappers
+		env.Remote = *execmd.NewClusterSSHCmd(env.Env.Remote.Hosts)
+		for _, s := range env.Remote.SSHCmds {
+			s.Cmd.PrefixStdout += tname
+			s.Cmd.PrefixStderr += tname
+			s.Cmd.PrefixCmd += tname
+		}
+
+		targets = append(targets, env)
+	}
+
 	return
 }
 
