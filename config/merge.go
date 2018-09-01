@@ -1,16 +1,13 @@
 package config
 
 import (
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
-	"regexp"
 	"strings"
+
+	"github.com/minkolazer/gp/lib"
 
 	"github.com/imdario/mergo"
 	"github.com/mink0/exec-cmd"
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 )
@@ -27,25 +24,27 @@ type EnvExec struct {
 // return initialized Env for envName
 // TODO
 // 	- templating
-func InitEnv(configPath string, envName string, targetNames []string) (targets []EnvExec, err error) {
+// 	-	refactor:
+//		- make slice of targets,parents,defaults
+//		- merge them in one action (func mergo.Map)
+func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error) {
 	var (
 		config map[string]Env // unitialized envs from config files
 	)
 
-	log.Printf(`init env for %s:%s using: %s...`, envName, targetNames, configPath)
+	log.Printf(`init environment for %s:%s using config: %s...`, envName, targetNames, ConfigPath)
 
-	if config, err = readConfig(configPath); err != nil {
-		return
-	}
+	// read config
+	cfg := getConfig()
 
 	// check config contains requested envName
-	if _, ok := config[envName]; !ok {
-		err = errors.New("unknown env: " + envName)
+	if _, ok := cfg[envName]; !ok {
+		err = errors.Errorf("unknown environment: %s", envName)
 		return
 	}
 
 	env := EnvExec{
-		Env: config[envName],
+		Env: cfg[envName],
 	}
 
 	// merge `General` field into `Local` and `Remote` fields
@@ -57,14 +56,14 @@ func InitEnv(configPath string, envName string, targetNames []string) (targets [
 	}
 
 	// get list of env parents
-	envParents, err := getParents(config, envName)
+	envParents, err := getParents(cfg, envName)
 	if err != nil {
-		err = errors.Wrapf(err, "can't resolve '%s' env parents: %v", envName, envParents)
+		err = errors.Wrapf(err, `can't resolve %s environment parents: %v`, envName, envParents)
 		return
 	}
 
 	if len(envParents) > 0 {
-		log.Printf(`found %s parents: %v`, envName, envParents)
+		log.Printf(`found "%s" parents: %v`, envName, envParents)
 
 		// merge parents fields
 		for _, e := range envParents {
@@ -106,64 +105,75 @@ func InitEnv(configPath string, envName string, targetNames []string) (targets [
 	*/
 
 	for _, tname := range targetNames {
-		t, ok := env.Env.Targets[tname]
+		tEnv := EnvExec{}
+		if err = mergo.Merge(&tEnv, env); err != nil {
+			return
+		}
+
+		t, ok := tEnv.Env.Targets[tname]
 		if !ok {
-			if len(targetNames) > 1 {
-				err = errors.Errorf("unknown target %s for %s env", tname, envName)
-				return
-			}
-
-			break
+			err = errors.Errorf(`unknown target "%s" for "%s" environment`, tname, envName)
+			return
 		}
 
-		tEnv := Env{}
 		// merge target environment
-		if err = mergo.Merge(&tEnv.Defaults, t.Defaults); err != nil {
+		if err = mergo.Merge(&t.Local, t.Defaults); err != nil {
 			return
 		}
-		if err = mergo.Merge(&tEnv.Local, tEnv.Defaults); err != nil {
-			return
-		}
-		if err = mergo.Merge(&tEnv.Remote, tEnv.Defaults); err != nil {
+		if err = mergo.Merge(&t.Remote, t.Defaults); err != nil {
 			return
 		}
 
-		// merge target environment into env and override fields which are not default
-		if err = mergo.Merge(&env.Env.Defaults, t.Defaults, mergo.WithOverride); err != nil {
+		// merge target environment and override fields which are not default
+		if err = mergo.Merge(&tEnv.Env.Defaults, t.Defaults, mergo.WithOverride); err != nil {
 			return
 		}
-		if err = mergo.Merge(&env.Env.Local, tEnv.Local, mergo.WithOverride); err != nil {
+		if err = mergo.Merge(&tEnv.Env.Local, t.Local, mergo.WithOverride); err != nil {
 			return
 		}
-		if err = mergo.Merge(&env.Env.Remote, tEnv.Remote, mergo.WithOverride); err != nil {
+		if err = mergo.Merge(&tEnv.Env.Remote, t.Remote, mergo.WithOverride); err != nil {
 			return
 		}
 
 		// re-init exec wrappers
-		env.Remote = *execmd.NewClusterSSHCmd(env.Env.Remote.Hosts)
-		for _, s := range env.Remote.SSHCmds {
-			s.Cmd.PrefixStdout += tname
-			s.Cmd.PrefixStderr += tname
-			s.Cmd.PrefixCmd += tname
+		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Env.Remote.Hosts)
+		for _, s := range tEnv.Remote.SSHCmds {
+			s.Cmd.PrefixStdout = strings.TrimSpace(s.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
+			s.Cmd.PrefixStderr += strings.Split(s.Cmd.PrefixStderr, "@")[0] +
+				lib.Color("|"+tname+" ") + lib.ColorErr("@err")
+			s.Cmd.PrefixCmd += "(" + tname + ") "
 		}
 
-		targets = append(targets, env)
+		targets = append(targets, tEnv)
 	}
 
 	return
 }
 
 // GetEnvs reads config and produce list of envs for auto completion
-func GetEnvs(configPath string) (envs []string, err error) {
-	config, err := readConfig(configPath)
-	if err != nil {
-		return nil, err
-	}
+func GetEnvs() (envs []string) {
+	config := getConfig()
 
 	for name, env := range config {
 		if !env.Hidden && name != "default" {
 			envs = append(envs, name)
 		}
+	}
+
+	return
+}
+
+// GetTargets returns list of target names for the env
+func GetTargets(env string) (targets []string, err error) {
+	config := getConfig()
+
+	if _, ok := config[env]; !ok {
+		err = errors.Errorf("unknown environment %s", env)
+		return
+	}
+
+	for k := range config[env].Targets {
+		targets = append(targets, k)
 	}
 
 	return
@@ -176,13 +186,13 @@ func getParents(envs map[string]Env, envName string) (parents []string, err erro
 	)
 
 	walker = func(envs map[string]Env, envName string) []string {
-		if arrayContains(parents, envName) != -1 {
+		if lib.ArrayContains(parents, envName) != -1 {
 			err = errors.New("circular parent reference:\n" + strings.Join(append(parents, envName), " > "))
 			return parents
 		}
 
 		if _, ok := envs[envName]; !ok {
-			err = errors.New("unknown parent: " + envName)
+			err = errors.Errorf(`unknown parent: "%s"`, envName)
 			return parents
 		}
 
@@ -204,67 +214,4 @@ func getParents(envs map[string]Env, envName string) (parents []string, err erro
 	}
 
 	return walker(envs, envName)[1:], err
-}
-
-func readConfig(configPath string) (config map[string]Env, err error) {
-	var yamls []string
-
-	if configPath == "" {
-		err = errors.New("no config path provided")
-		return
-	}
-
-	if yamls, err = getYamlFiles(configPath); err != nil {
-		return
-	}
-
-	for _, fname := range yamls {
-		log.Printf("reading %s", fname)
-
-		data := []byte{}
-		if data, err = ioutil.ReadFile(fname); err != nil {
-			return
-		}
-
-		yamlData := map[string]Env{}
-		if err = yaml.Unmarshal(data, &yamlData); err != nil {
-			err = errors.Wrap(err, "can't unmarshal config: %v")
-			return
-		}
-
-		for cKey := range config {
-			for yKey := range yamlData {
-				if cKey == yKey {
-					err = errors.New("duplicate environment found in config: " + cKey)
-					return
-				}
-			}
-		}
-
-		if err = mergo.Merge(&config, yamlData); err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func getYamlFiles(path string) (flist []string, err error) {
-	if _, err = os.Stat(path); os.IsNotExist(err) {
-		return
-	}
-
-	var extentions = regexp.MustCompile(".ya?ml$")
-
-	visit := func(path string, f os.FileInfo, err error) error {
-		if !f.IsDir() && extentions.MatchString(f.Name()) {
-			flist = append(flist, path)
-		}
-
-		return nil
-	}
-
-	err = filepath.Walk(path, visit)
-
-	return
 }

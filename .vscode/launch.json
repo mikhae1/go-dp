@@ -10,7 +10,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "args": ["log", "test"],
+      "args": ["log", "flow-test", "noodoo"],
       "program": "${workspaceRoot}"
     },
     {

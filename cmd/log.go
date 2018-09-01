@@ -32,14 +32,14 @@ var logCmd = &cobra.Command{
 	// 	if len(args) < 1 {
 	// 		return errors.New("one argument is required")
 	// 	}
-	// 	if i := arrayContains(getEnv(), args[0]); i != -1 {
+	// 	if i := lib.arrayContains(getEnv(), args[0]); i != -1 {
 	// 		return nil
 	// 	}
 	// 	return fmt.Errorf("unknown environment specified: %s", args[0])
 	// },
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Printf("inside log with args: %v\n", args)
+		log.Printf("inside log command with args: %s\n", ctx.args)
 
 		// var cmds []execmd.ClusterRes
 		for _, env := range ctx.targets {
@@ -65,7 +65,7 @@ var logCmd = &cobra.Command{
 				}
 			}
 
-			_, err := env.Remote.Run("tail -f -n100 " + lpath)
+			_, err := env.Remote.Run("tail -f -n3 " + lpath)
 			if err != nil {
 				return err
 			}

@@ -1,11 +1,9 @@
-package config
+package lib
 
 import "reflect"
 
-// LineBreak used in tests
-// const LineBreak = "\n"
-
-func arrayContains(array interface{}, val interface{}) (index int) {
+// ArrayContains finds index of `val` in `array`
+func ArrayContains(array interface{}, val interface{}) (index int) {
 	index = -1
 
 	switch reflect.TypeOf(array).Kind() {
