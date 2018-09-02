@@ -14,8 +14,10 @@ import (
 
 // EnvExec is wrapper on Env with Local and Remote commands initialized
 type EnvExec struct {
-	Env   Env
-	Local execmd.Cmd
+	EnvName    string
+	TargetName string
+	Config     EnvYaml
+	Local      execmd.Cmd
 	// only one remote command
 	Remote execmd.ClusterSSHCmd
 }
@@ -29,7 +31,7 @@ type EnvExec struct {
 //		- merge them in one action (func mergo.Map)
 func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error) {
 	var (
-		config map[string]Env // unitialized envs from config files
+		config map[string]EnvYaml // unitialized envs from config files
 	)
 
 	log.Printf(`init environment for %s:%s using config: %s...`, envName, targetNames, ConfigPath)
@@ -44,14 +46,14 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 	}
 
 	env := EnvExec{
-		Env: cfg[envName],
+		Config: cfg[envName],
 	}
 
 	// merge `General` field into `Local` and `Remote` fields
-	if err = mergo.Merge(&env.Env.Remote, env.Env.Defaults); err != nil {
+	if err = mergo.Merge(&env.Config.Remote, env.Config.Defaults); err != nil {
 		return
 	}
-	if err = mergo.Merge(&env.Env.Local, env.Env.Defaults); err != nil {
+	if err = mergo.Merge(&env.Config.Local, env.Config.Defaults); err != nil {
 		return
 	}
 
@@ -67,32 +69,32 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 
 		// merge parents fields
 		for _, e := range envParents {
-			if err = mergo.Merge(&env.Env.Defaults, config[e].Defaults); err != nil {
+			if err = mergo.Merge(&env.Config.Defaults, config[e].Defaults); err != nil {
 				return
 			}
-			if err = mergo.Merge(&env.Env.Local, config[e].Local); err != nil {
+			if err = mergo.Merge(&env.Config.Local, config[e].Local); err != nil {
 				return
 			}
-			if err = mergo.Merge(&env.Env.Remote, config[e].Remote); err != nil {
+			if err = mergo.Merge(&env.Config.Remote, config[e].Remote); err != nil {
 				return
 			}
 		}
 
 		// when parents merged, new data may appear in `Defaults` fields,
 		// so merge `Defaults` fields into `Local` and `Remote`
-		if err = mergo.Merge(&env.Env.Remote, env.Env.Defaults); err != nil {
+		if err = mergo.Merge(&env.Config.Remote, env.Config.Defaults); err != nil {
 			return
 		}
-		if err = mergo.Merge(&env.Env.Local, env.Env.Defaults); err != nil {
+		if err = mergo.Merge(&env.Config.Local, env.Config.Defaults); err != nil {
 			return
 		}
 	}
 
 	// init exec wrappers
 	env.Local = *execmd.NewCmd()
-	env.Remote = *execmd.NewClusterSSHCmd(env.Env.Remote.Hosts)
+	env.Remote = *execmd.NewClusterSSHCmd(env.Config.Remote.Hosts)
 
-	if len(env.Env.Targets) == 0 || len(targetNames) == 0 {
+	if len(env.Config.Targets) == 0 || len(targetNames) == 0 {
 		targets = append(targets, env)
 		return
 	}
@@ -110,7 +112,7 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 			return
 		}
 
-		t, ok := tEnv.Env.Targets[tname]
+		t, ok := tEnv.Config.Targets[tname]
 		if !ok {
 			err = errors.Errorf(`unknown target "%s" for "%s" environment`, tname, envName)
 			return
@@ -125,18 +127,18 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 		}
 
 		// merge target environment and override fields which are not default
-		if err = mergo.Merge(&tEnv.Env.Defaults, t.Defaults, mergo.WithOverride); err != nil {
+		if err = mergo.Merge(&tEnv.Config.Defaults, t.Defaults, mergo.WithOverride); err != nil {
 			return
 		}
-		if err = mergo.Merge(&tEnv.Env.Local, t.Local, mergo.WithOverride); err != nil {
+		if err = mergo.Merge(&tEnv.Config.Local, t.Local, mergo.WithOverride); err != nil {
 			return
 		}
-		if err = mergo.Merge(&tEnv.Env.Remote, t.Remote, mergo.WithOverride); err != nil {
+		if err = mergo.Merge(&tEnv.Config.Remote, t.Remote, mergo.WithOverride); err != nil {
 			return
 		}
 
 		// re-init exec wrappers
-		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Env.Remote.Hosts)
+		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Config.Remote.Hosts)
 		for _, s := range tEnv.Remote.SSHCmds {
 			s.Cmd.PrefixStdout = strings.TrimSpace(s.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
 			s.Cmd.PrefixStderr += strings.Split(s.Cmd.PrefixStderr, "@")[0] +
@@ -180,12 +182,12 @@ func GetTargets(env string) (targets []string, err error) {
 }
 
 // recursive parents search
-func getParents(envs map[string]Env, envName string) (parents []string, err error) {
+func getParents(envs map[string]EnvYaml, envName string) (parents []string, err error) {
 	var (
-		walker func(envs map[string]Env, envName string) []string
+		walker func(envs map[string]EnvYaml, envName string) []string
 	)
 
-	walker = func(envs map[string]Env, envName string) []string {
+	walker = func(envs map[string]EnvYaml, envName string) []string {
 		if lib.ArrayContains(parents, envName) != -1 {
 			err = errors.New("circular parent reference:\n" + strings.Join(append(parents, envName), " > "))
 			return parents

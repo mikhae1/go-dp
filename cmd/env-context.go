@@ -17,103 +17,48 @@ import (
 	"github.com/minkolazer/gp/config"
 )
 
-// TargetCmd is a wrapper on TargetsCmd
+// EnvsCmd is a wrapper on ClusterSSHCmd
 type EnvsCmd struct {
-	Cmds []*execmd.ClusterSSHCmd
-
-	Envs map[string][]config.EnvExec
-
-	StartedCmds []TargetsRes
+	Cmds        []execmd.ClusterSSHCmd
+	Envs        []config.EnvExec
+	StartedCmds []EnvsRes
 	StopOnError bool
 }
 
-type TargetsRes struct {
-	env    string
-	target string
-	res    execmd.ClusterRes
-	err    error
+type EnvsRes struct {
+	EnvName    string
+	TargetName string
+	Result     execmd.ClusterRes
+	Error      error
 }
 
-// NewTargetsCmd inits TargetsCmd with defaults
-func NewTargetsCmd(targets []string) *TargetsCmd {
-	t := TargetsCmd{}
-	t.StopOnError = false
-	t.Targets = append([]string(nil), targets...)
-	for _, h := range hosts {
-		t.TargetsCmd = append(t.TargetsCmd, NewSSHCmd(h))
-	}
-	return &t
+// NewEnvsCmd inits EnvsCmd with defaults
+func NewEnvsCmd(envs []config.EnvExec) *EnvsCmd {
+	e := EnvsCmd{}
+	e.Envs = envs
+	return &e
 }
 
-// Wait wraps SSHCmd.Wait for array of hosts into t.StartedCmds struct
-func (t *TargetsCmd) Wait() error {
-	// TODO: list errors should be returned, or maybe hostname appended
-	// now you should access `.StartedCmds` to see exact where error occurs
-	var lastError error
-	for i := range t.StartedCmds {
-		// skip errors on Start()
-		if t.StartedCmds[i].Err != nil {
-			continue
-		}
+// // Loop through envs and runs
+// func (e *EnvsCmd) Run(command string, parallel bool) ([]EnvsRes, error) {
+// 	// reset started on each new start
+// 	e.StartedCmds = []EnvsRes{}
+// 	for i, env := range e.Envs {
+// 		res := EnvsRes{}
 
-		t.StartedCmds[i].Err = t.TargetsCmd[i].Wait()
-		if t.StartedCmds[i].Err != nil {
-			if t.StopOnError {
-				return t.StartedCmds[i].Err
-			}
+// 		exet := e.EnvsCmd[i].Start
+// 		if !parallel {
+// 			exec = e.EnvsCmd[i].Run
+// 		}
 
-			lastError = t.StartedCmds[i].Err
-		}
-	}
+// 		cres.Res, cres.Err = exec(command)
 
-	return lastError
-}
+// 		// save results
+// 		e.StartedCmds = append(e.StartedCmds, cres)
+// 		if e.StopOnError && cres.Err != nil {
+// 			return e.StartedCmds, cres.Err
+// 		}
+// 	}
 
-// Run executes command in parallel: all commands starts running simultaneously at the hosts
-func (t *TargetsCmd) Run(command string) (results []TargetsRes, err error) {
-	if results, err = t.Start(command); err != nil {
-		return
-	}
-
-	err = t.Wait()
-
-	results = t.StartedCmds
-
-	return
-}
-
-// RunOneByOne runs command in series: run at first host, then run at second, then...
-func (t *TargetsCmd) RunOneByOne(command string) (results []TargetsRes, err error) {
-	return t.start(command, false)
-}
-
-// Start runs command in parallel
-func (t *TargetsCmd) Start(command string) (results []TargetsRes, err error) {
-	return t.start(command, true)
-}
-
-// Loop through hosts and start
-// .Start() or .Run() ssh command depending on `parallel` flag
-func (t *TargetsCmd) start(command string, parallel bool) ([]TargetsRes, error) {
-	// reset started on each new start
-	t.StartedCmds = []TargetsRes{}
-	for i, host := range t.Targets {
-		cres := TargetsRes{}
-		cres.Host = host
-
-		exet := t.TargetsCmd[i].Start
-		if !parallel {
-			exec = t.TargetsCmd[i].Run
-		}
-
-		cres.Res, cres.Err = exec(command)
-
-		// save results
-		t.StartedCmds = append(t.StartedCmds, cres)
-		if t.StopOnError && cres.Err != nil {
-			return t.StartedCmds, cres.Err
-		}
-	}
-
-	return t.StartedCmds, nil
-}
+// 	return e.StartedCmds, nil
+// }

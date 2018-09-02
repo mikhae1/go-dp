@@ -20,12 +20,12 @@ var (
 	ConfigPath string
 
 	// config singleton
-	config     map[string]Env
+	config     map[string]EnvYaml
 	configOnce sync.Once
 )
 
 // get config files
-func getConfig() map[string]Env {
+func getConfig() map[string]EnvYaml {
 	configOnce.Do(func() {
 		var err error
 		if config, err = readConfig(ConfigPath); err != nil {
@@ -36,7 +36,7 @@ func getConfig() map[string]Env {
 	return config
 }
 
-func readConfig(configPath string) (config map[string]Env, err error) {
+func readConfig(configPath string) (config map[string]EnvYaml, err error) {
 	var yamls []string
 
 	if configPath == "" {
@@ -56,7 +56,7 @@ func readConfig(configPath string) (config map[string]Env, err error) {
 			return
 		}
 
-		yamlData := map[string]Env{}
+		yamlData := map[string]EnvYaml{}
 		if err = yaml.Unmarshal(data, &yamlData); err != nil {
 			err = errors.Wrap(err, "can't unmarshal config: %v")
 			return

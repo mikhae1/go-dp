@@ -51,7 +51,7 @@ var logCmd = &cobra.Command{
 				} else {
 					// names  log
 					for _, a := range ctx.args[0:] {
-						for k, l := range env.Env.Remote.Log {
+						for k, l := range env.Config.Remote.Log {
 							if k == a {
 								lpath += l + " "
 							}
@@ -60,7 +60,7 @@ var logCmd = &cobra.Command{
 				}
 			} else {
 				// no  specified
-				for _, l := range env.Env.Remote.Log {
+				for _, l := range env.Config.Remote.Log {
 					lpath += l + " "
 				}
 			}
