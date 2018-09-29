@@ -18,8 +18,7 @@ type EnvExec struct {
 	TargetName string
 	Config     EnvYaml
 	Local      execmd.Cmd
-	// only one remote command
-	Remote execmd.ClusterSSHCmd
+	Remote     execmd.ClusterSSHCmd
 }
 
 // InitEnv read config files, resolve parents,
@@ -46,7 +45,8 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 	}
 
 	env := EnvExec{
-		Config: cfg[envName],
+		EnvName: envName,
+		Config:  cfg[envName],
 	}
 
 	// merge `General` field into `Local` and `Remote` fields
@@ -101,13 +101,13 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 
 	/*
 		targets initialization
-
-		best effort: target argument maybe not a target,
-		throw error only if we have a list of the targets
 	*/
 
 	for _, tname := range targetNames {
-		tEnv := EnvExec{}
+		tEnv := EnvExec{
+			TargetName: tname,
+		}
+
 		if err = mergo.Merge(&tEnv, env); err != nil {
 			return
 		}
@@ -139,11 +139,11 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 
 		// re-init exec wrappers
 		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Config.Remote.Hosts)
-		for _, s := range tEnv.Remote.SSHCmds {
-			s.Cmd.PrefixStdout = strings.TrimSpace(s.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
-			s.Cmd.PrefixStderr += strings.Split(s.Cmd.PrefixStderr, "@")[0] +
+		for _, c := range tEnv.Remote.Cmds {
+			c.SSHCmd.Cmd.PrefixStdout = strings.TrimSpace(c.SSHCmd.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
+			c.SSHCmd.Cmd.PrefixStderr += strings.Split(c.SSHCmd.Cmd.PrefixStderr, "@")[0] +
 				lib.Color("|"+tname+" ") + lib.ColorErr("@err")
-			s.Cmd.PrefixCmd += "(" + tname + ") "
+			c.SSHCmd.Cmd.PrefixCmd = strings.TrimSpace(c.SSHCmd.Cmd.PrefixCmd) + lib.Color("|"+tname+" ")
 		}
 
 		targets = append(targets, tEnv)

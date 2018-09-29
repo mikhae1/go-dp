@@ -1,0 +1,181 @@
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "": flow-test orchid-master-app orchid-master-staging orchid-sgc-test orchid-master-parent orchid-master-vision orchid-master-prod orchid-master-dev test gtr-test
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "": orchid-sgc-test orchid-master-prod orchid-master-parent orchid-master-vision flow-test gtr-test orchid-master-staging orchid-master-dev orchid-master-app test
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "flo": flow-test 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": noodoo flow
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": noodoo flow
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": noodoo flow
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": noodoo flow
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": noodoo flow
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test
+__gp_handle_noun: c is 2 words[c] is gtr-test
+__gp_handle_reply
+__custom_func: for "gtr-test": flow noodoo
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-tes": gtr-test 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_reply
+__custom_func: for "gtr-test,": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test,flow-test
+__gp_handle_noun: c is 2 words[c] is gtr-test,flow-test
+__gp_handle_reply
+__custom_func: for "gtr-test,flow-test": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is log
+__gp_handle_command: c is 1 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 2 words[c] is gtr-test,flow-test
+__gp_handle_noun: c is 2 words[c] is gtr-test,flow-test
+__gp_handle_reply
+__custom_func: for "gtr-test,flow-test": 
+__gp_handle_word: c is 0 words[c] is gp
+__gp_handle_command: c is 0 words[c] is gp
+__gp_handle_command: looking for _gp_root_command
+__gp_handle_word: c is 1 words[c] is -v
+__gp_handle_flag: c is 1 words[c] is -v
+__gp_handle_flag: looking for -v
+__gp_handle_word: c is 2 words[c] is log
+__gp_handle_command: c is 2 words[c] is log
+__gp_handle_command: looking for _gp_log
+__gp_handle_word: c is 3 words[c] is gtr-test,flow-test
+__gp_handle_noun: c is 3 words[c] is gtr-test,flow-test
+__gp_handle_reply
+__custom_func: for "gtr-test,flow-test": 

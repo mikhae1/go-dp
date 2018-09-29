@@ -1,9 +1,9 @@
 package config
 
-// EnvYaml is a yaml config fromat
-// Remote for remote commands
-// Local for local commands
-// General for both local and remote commands and merged to Local and Remote
+// EnvYaml is a yaml config format
+// Remote - config for remote commands
+// Local - config for local commands
+// Defaults is merged to Local and Remote config
 type EnvYaml struct {
 	Parent   string            `yaml:"parent"`
 	Hidden   bool              `yaml:"hidden"`
@@ -18,6 +18,7 @@ type EnvYaml struct {
 	} `yaml:"targets"`
 }
 
+// EnvTargetYaml is a EnvYaml target
 type EnvTargetYaml struct {
 	Hosts  sliceOrString `yaml:"hosts"`
 	User   string        `yaml:"user"`
