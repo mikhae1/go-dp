@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,23 +8,22 @@ import (
 
 // logCmd represents the log command
 var logCmd = &cobra.Command{
-	Use:     "log <env|path> [target]",
-	Short:   "Stream logs from remote environment",
-	Args:    cobra.MinimumNArgs(1),
-	RunE:    logRun,
-	PreRunE: initEnvContextE,
+	Use:          "log <env|path> [target]",
+	Short:        "Stream logs from remote environments",
+	Args:         cobra.MinimumNArgs(1),
+	RunE:         logRun,
+	PreRunE:      initEnvContextE,
+	SilenceUsage: true,
 }
 
 func logRun(cmd *cobra.Command, args []string) error {
-	log.Printf("inside log command with args: %s, ecx.args: %s\n", args, ectx.args)
-	var tailCmd = "tail -n1 -f "
+	var tailCmd = "tailf -n1 "
 
 	logPath := ""
 
 	// real path passed, no need to parse targets
-	if len(ectx.args) > 0 && strings.Contains(ectx.args[0], "/") {
+	if len(ectx.args) > 0 {
 		logPath += strings.Join(ectx.args[0:], " ")
-
 		_, err := ectx.run.Remote(tailCmd + logPath)
 		return err
 	}

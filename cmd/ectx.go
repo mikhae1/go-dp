@@ -119,7 +119,7 @@ func (e *EnvsCmd) runRemote(command string, parallel bool) (results []EnvsRemote
 // -	one array [tgts]:
 // 		for configured env check every target. if not found - return error.
 func initEnvContextE(cmd *cobra.Command, args []string) (err error) {
-	log.Printf("Started initEnvContextE with args: %v\n", args)
+	log.Printf("started initEnvContextE with args: %v", args)
 
 	if len(args) == 0 {
 		return
@@ -179,8 +179,11 @@ func initEnvContextE(cmd *cobra.Command, args []string) (err error) {
 	// init args
 	ectx.args = append([]string(nil), args...)
 	argLen := 1
-	if len(filTgts) > 1 || len(filTgts[argEnvs[0]]) > 0 {
-		argLen = 2
+	for _, tgt := range filTgts {
+		if len(tgt) > 0 {
+			argLen = 2
+			break
+		}
 	}
 	// pop env and target arguments
 	ectx.args = append(args[:envArgIndex], ectx.args[envArgIndex+argLen:]...)
@@ -201,12 +204,14 @@ func initEnvContextE(cmd *cobra.Command, args []string) (err error) {
 	// cmd.SetArgs(ecx.args)
 	// cmd.ValidArgs = ecx.args
 	// rootCmd.SetArgs([]string{"gtr", "flow"})
-	// rootCmd.ArgAliases = []string{"gtr", "flow"}
+
+	// TODO: print help
 	// cmd.SetHelpTemplate(strings.Join(envList, ","))
 	// cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 	// 	fmt.Printf("hello form dfsvsdfssdfs")
 	// })
 
-	log.Printf("initialized %v ectx targets", len(ectx.targets))
+	log.Printf("initialized %v ectx.targets, ectx.args: %v", len(ectx.targets), ectx.args)
+
 	return
 }

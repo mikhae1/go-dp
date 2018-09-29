@@ -23,11 +23,13 @@ type EnvExec struct {
 
 // InitEnv read config files, resolve parents,
 // return initialized Env for envName
-// TODO
+// TODO:
 // 	- templating
-// 	-	refactor:
-//		- make slice of targets,parents,defaults
-//		- merge them in one action (func mergo.Map)
+//
+// FIXME:
+//		- make list of [targets,parents,defaults]
+//		- merge them once (func mergo.Map)
+//		- init them once
 func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error) {
 	var (
 		config map[string]EnvYaml // unitialized envs from config files
@@ -93,6 +95,7 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 	// init exec wrappers
 	env.Local = *execmd.NewCmd()
 	env.Remote = *execmd.NewClusterSSHCmd(env.Config.Remote.Hosts)
+	env.Remote.Cwd = env.Config.Remote.Path
 
 	if len(env.Config.Targets) == 0 || len(targetNames) == 0 {
 		targets = append(targets, env)
@@ -137,8 +140,9 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 			return
 		}
 
-		// re-init exec wrappers
+		// re-init exec wrappers (rewrite this ASAP)
 		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Config.Remote.Hosts)
+		tEnv.Remote.Cwd = tEnv.Config.Remote.Path
 		for _, c := range tEnv.Remote.Cmds {
 			c.SSHCmd.Cmd.PrefixStdout = strings.TrimSpace(c.SSHCmd.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
 			c.SSHCmd.Cmd.PrefixStderr += strings.Split(c.SSHCmd.Cmd.PrefixStderr, "@")[0] +
