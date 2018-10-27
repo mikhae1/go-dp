@@ -31,10 +31,6 @@ type EnvExec struct {
 //		- merge them once (func mergo.Map)
 //		- init them once
 func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error) {
-	var (
-		config map[string]EnvYaml // unitialized envs from config files
-	)
-
 	log.Printf(`init environment for %s:%s using config: %s...`, envName, targetNames, ConfigPath)
 
 	// read config
@@ -71,13 +67,13 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 
 		// merge parents fields
 		for _, e := range envParents {
-			if err = mergo.Merge(&env.Config.Defaults, config[e].Defaults); err != nil {
+			if err = mergo.Merge(&env.Config.Defaults, cfg[e].Defaults); err != nil {
 				return
 			}
-			if err = mergo.Merge(&env.Config.Local, config[e].Local); err != nil {
+			if err = mergo.Merge(&env.Config.Local, cfg[e].Local); err != nil {
 				return
 			}
-			if err = mergo.Merge(&env.Config.Remote, config[e].Remote); err != nil {
+			if err = mergo.Merge(&env.Config.Remote, cfg[e].Remote); err != nil {
 				return
 			}
 		}
@@ -96,6 +92,11 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 	env.Local = *execmd.NewCmd()
 	env.Remote = *execmd.NewClusterSSHCmd(env.Config.Remote.Hosts)
 	env.Remote.Cwd = env.Config.Remote.Path
+	if env.Config.Remote.User != "" {
+		for i := range env.Remote.Cmds {
+			env.Remote.Cmds[i].SSHCmd.User = env.Config.Remote.User
+		}
+	}
 
 	if len(env.Config.Targets) == 0 || len(targetNames) == 0 {
 		targets = append(targets, env)
@@ -143,6 +144,12 @@ func InitEnv(envName string, targetNames []string) (targets []EnvExec, err error
 		// re-init exec wrappers (rewrite this ASAP)
 		tEnv.Remote = *execmd.NewClusterSSHCmd(tEnv.Config.Remote.Hosts)
 		tEnv.Remote.Cwd = tEnv.Config.Remote.Path
+		if env.Config.Remote.User != "" {
+			for i := range tEnv.Remote.Cmds {
+				tEnv.Remote.Cmds[i].SSHCmd.User = tEnv.Config.Remote.User
+			}
+		}
+
 		for _, c := range tEnv.Remote.Cmds {
 			c.SSHCmd.Cmd.PrefixStdout = strings.TrimSpace(c.SSHCmd.Cmd.PrefixStdout) + lib.Color("|"+tname+" ")
 			c.SSHCmd.Cmd.PrefixStderr += strings.Split(c.SSHCmd.Cmd.PrefixStderr, "@")[0] +

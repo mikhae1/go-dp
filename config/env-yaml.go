@@ -22,12 +22,13 @@ type EnvYaml struct {
 type EnvTargetYaml struct {
 	Hosts  sliceOrString `yaml:"hosts"`
 	User   string        `yaml:"user"`
-	Log    mapOrString   `yaml:"log"`
-	Cmd    mapOrString   `yaml:"cmd"`
-	Cat    mapOrString   `yaml:"cat"`
 	Branch string        `yaml:"branch"`
 	URL    string        `yaml:"url"`
 	Path   string        `yaml:"path"`
+
+	Log mapOrString `yaml:"log"`
+	Cmd mapOrString `yaml:"cmd"`
+	Cat mapOrString `yaml:"cat"`
 }
 
 // custom types for shorten yamls

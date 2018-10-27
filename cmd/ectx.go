@@ -36,6 +36,7 @@ type envContext struct {
 type EnvsCmd struct {
 	Envs        []config.EnvExec
 	StopOnError bool
+	Interactive bool
 }
 
 // EnvsRemoteRes is a result of .Remote()
@@ -84,6 +85,12 @@ func (e *EnvsCmd) runRemote(command string, parallel bool) (results []EnvsRemote
 		exec := env.Remote.Run
 		if parallel {
 			exec = env.Remote.Start
+		}
+
+		if e.Interactive {
+			for _, c := range env.Remote.Cmds {
+				c.SSHCmd.Interactive = true
+			}
 		}
 
 		res.Result, res.Error = exec(command)

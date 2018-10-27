@@ -6,49 +6,49 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// logCmd represents the log command
-var logCmd = &cobra.Command{
-	Use:          "log <env|path> [target]",
-	Short:        "Stream logs from remote environments",
+// tailCmd represents the tail command
+var tailCmd = &cobra.Command{
+	Use:          "tail <env|path> [target]",
+	Short:        "Stream tails from remote environments",
 	Args:         cobra.MinimumNArgs(1),
-	RunE:         logRun,
+	RunE:         tailRun,
 	PreRunE:      initEnvContextE,
 	SilenceUsage: true,
 }
 
-func logRun(cmd *cobra.Command, args []string) error {
+func tailRun(cmd *cobra.Command, args []string) error {
 	var tailCmd = "tailf -n1 "
 
-	logPath := ""
+	tailPath := ""
 
 	// real path passed, no need to parse targets
 	if len(ectx.args) > 0 {
-		logPath += strings.Join(ectx.args[0:], " ")
-		_, err := ectx.run.Remote(tailCmd + logPath)
+		tailPath += strings.Join(ectx.args[0:], " ")
+		_, err := ectx.run.Remote(tailCmd + tailPath)
 		return err
 	}
 
 	// multi targets
 	for _, env := range ectx.targets {
-		logPath := ""
+		tailPath := ""
 		if len(ectx.args) > 0 {
-			// named log
+			// named tail
 			for _, a := range ectx.args[0:] {
 				for k, l := range env.Config.Remote.Log {
 					if k == a {
-						logPath += l + " "
+						tailPath += l + " "
 					}
 				}
 			}
 		} else {
 			// no path specified
 			for _, l := range env.Config.Remote.Log {
-				logPath += l + " "
+				tailPath += l + " "
 			}
 		}
 
-		logPath = strings.TrimSpace(logPath)
-		if _, err := env.Remote.Start(tailCmd + logPath); err != nil {
+		tailPath = strings.TrimSpace(tailPath)
+		if _, err := env.Remote.Start(tailCmd + tailPath); err != nil {
 			return err
 		}
 	}
@@ -65,5 +65,5 @@ func logRun(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(logCmd)
+	rootCmd.AddCommand(tailCmd)
 }
